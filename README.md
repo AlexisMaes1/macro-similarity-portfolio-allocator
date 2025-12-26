@@ -75,17 +75,9 @@ pip install pandas numpy yfinance matplotlib
 
 ```
 
-
-2. **Generate the Momentum Signal:**
+2. **Run the Backtest:**
 ```bash
-python generate_sp500_momentum.py
-
-```
-
-
-3. **Run the Backtest:**
-```bash
-python backtest.py
+python main.py
 
 ```
 
