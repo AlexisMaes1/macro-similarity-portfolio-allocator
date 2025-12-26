@@ -2,7 +2,7 @@
 
 # Macro-Driven Dynamic Asset Allocation Engine
 
-A robust quantitative investment strategy backtester that combines **macroeconomic regime detection** with **technical momentum signals** to dynamically rebalance a multi-asset portfolio.
+A data-driven investment strategy backtester that combines **macroeconomic regime detection** with **technical momentum signals** to dynamically rebalance a multi-asset portfolio.
 
 This project implements a **weekly rebalancing** strategy using a "History-Based" Markowitz optimization approach. Instead of using recent historical volatility, it identifies similar macroeconomic periods in the past (using KNN) to project future risk and returns.
 
