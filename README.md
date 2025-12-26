@@ -6,12 +6,13 @@ A robust quantitative investment strategy backtester that combines **macroeconom
 
 This project implements a **weekly rebalancing** strategy using a "History-Based" Markowitz optimization approach. Instead of using recent historical volatility, it identifies similar macroeconomic periods in the past (using KNN) to project future risk and returns.
 
-## Key Performance Metrics (Backtest 2015-2025)
+You can also find the png comparing the performance of the SP500 and the results I had with the following configuration : 
+-target vol = 15%
+-long only
+-max weight = 25% (there is only 11 ETF)
+-shrinkage = 0 (it increases return)
+It gives a sharp ratio of 1.01 with an annual return of 11.50%, a risk of 11.43%, and a maximum drawdown of 13.23%.
 
-* **Annualized Return:** ~11.76%
-* **Sharpe Ratio:** 1.00
-* **Max Drawdown:** -13.0%
-* **Volatility:** 11.72%
 
 ## Strategy Methodology
 
