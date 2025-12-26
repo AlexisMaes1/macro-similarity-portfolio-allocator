@@ -3,18 +3,15 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-# ============================================================
-# === PARAMÈTRES GLOBAUX
-# ============================================================
 
-MACRO_CSV = "macro_indicators_v2.csv"
-MOM_DAILY_CSV = "sp500_daily_moml.csv"   
-PRICES_CSV = "asset_prices_daily_11ETF.csv"
+MACRO_CSV = "data/macro_indicators_v2.csv"
+MOM_DAILY_CSV = "data/sp500_daily_moml.csv"     
+PRICES_CSV = "data/asset_prices_daily_11ETF.csv"
 
 BACKTEST_START = "2015-01-01"
 CUTOFF_MARKET = "2006-01-01"
 
-# mapping classes d'actifs -> colonnes du CSV de prix
+# classes d'actifs
 ASSETS = [
     "Equity_SP500",
     "GovBonds_10y+",
@@ -80,9 +77,7 @@ TOLS = {
 
 REGIME_COL = "Regime"
 
-# ============================================================
-# === UTILITAIRES MATH
-# ============================================================
+
 
 def solve(A, b):
     return np.linalg.solve(A, b)
@@ -107,15 +102,15 @@ def project_long_only_capped(w: pd.Series, cap: float = 0.5) -> pd.Series:
     s = w2.sum()
     return w2 / s if s > 0 else w2
 
-# ============================================================
-# === CHARGEMENT & PRÉPA DONNÉES
-# ============================================================
+
+# === CHARGEMENT DONNÉES
+
 
 def load_macro(path: str) -> pd.DataFrame:
     df = pd.read_csv(path, parse_dates=["Date"], index_col="Date")
     df = df.sort_index()
 
-    # Momentum 3M Macro (calculé mensuellement par défaut)
+    # Momentum 3M Macro (calculé mensuellement)
     for col in MOM_BASE:
         if col in df.columns:
             df[f"{col}_mom3"] = df[col].diff(3)
@@ -142,7 +137,7 @@ def load_daily_momentum(path: str) -> pd.DataFrame:
     """Charge le momentum daily du SP500 généré séparément."""
     df = pd.read_csv(path, index_col=0, parse_dates=True)
     df = df.sort_index()
-    # On s'attend à une colonne 'SP500_MOM_3M'
+    # colonne 'SP500_MOM_3M'
     return df
 
 def load_prices(path: str) -> pd.DataFrame:
@@ -247,15 +242,13 @@ def adjust_mu_sigma(m: pd.Series,
     return m_adj, Sigma_adj
 
 
-# ============================================================
-# === ALLOCATION À UNE DATE t (MODIFIÉE POUR DAILY MOM)
-# ============================================================
+# === ALLOCATION À UNE DATE t
 
 def compute_allocation_at_date(
     decision_date: pd.Timestamp,
     macro_df: pd.DataFrame,
     prices_df: pd.DataFrame,
-    daily_mom_df: pd.DataFrame  # <--- Ajout de l'argument
+    daily_mom_df: pd.DataFrame 
 ) -> tuple[pd.Series, float, float]:
     
     # 1. Récupérer l'historique macro strictement avant t
@@ -264,29 +257,24 @@ def compute_allocation_at_date(
         return None, None, None
 
     # 2. Construire le "Point courant" (row_t)
-    #    Comme decision_date est un vendredi (ex: 15 mai), la macro disponible est celle fin avril.
-    #    On utilise 'asof' ou une recherche index <= date
     past_macro_dates = macro_df.index[macro_df.index <= decision_date]
     if len(past_macro_dates) == 0:
         return None, None, None
     
-    # On prend la dernière donnée macro connue
+    # dernière donnée macro connue
     last_macro_date = past_macro_dates[-1]
     row_t = macro_df.loc[last_macro_date].copy()
     
-    # --- AJUSTEMENT VITAL : INJECTION DU MOMENTUM DAILY ---
-    # On écrase la valeur mensuelle de 'SP500_MOM_3M' par la valeur précise du jour (si dispo)
-    # On cherche la valeur dispo dans daily_mom_df à la decision_date (ou juste avant)
+    # --- INJECTION DU MOMENTUM DAILY
+    # On écrase la valeur mensuelle de 'SP500_MOM_3M' par la valeur précise du jour
+    # On cherche la valeur dispo dans daily_mom_df à la decision_date 
     if not daily_mom_df.empty:
-        # On utilise asof pour trouver la date valide la plus proche dans le passé immédiat
         idx_loc = daily_mom_df.index.get_indexer([decision_date], method='pad')[0]
         if idx_loc != -1:
             fresh_date = daily_mom_df.index[idx_loc]
-            # On vérifie qu'on ne prend pas une donnée trop vieille (ex: > 10 jours)
             if (decision_date - fresh_date).days < 10:
                 fresh_val = daily_mom_df.iloc[idx_loc]['SP500_MOM_3M']
                 row_t['SP500_MOM_3M'] = fresh_val
-                # print(f"DEBUG {decision_date.date()}: Updated MOM to {fresh_val:.4f} from {fresh_date.date()}")
 
     regime_t = row_t[REGIME_COL]
     x_level = row_t[FEATURES_LEVEL]
@@ -433,9 +421,7 @@ def plot_performance_comparison(equity_df: pd.DataFrame,
     print(f"Graphique sauvegardé : {output_path}")
 
 
-# ============================================================
-# === BACKTEST (MAIN) - VERSION HEBDOMADAIRE
-# ============================================================
+# === BACKTEST
 
 def backtest():
     print("Chargement des données...")
@@ -450,15 +436,11 @@ def backtest():
         print(f"ERREUR : Le fichier {MOM_DAILY_CSV} est introuvable.")
         return
 
-    # === LOGIQUE TEMPORELLE MODIFIÉE : FREQUENCE HEBDOMADAIRE ===
-    # Au lieu de prendre les dates du fichier macro, on génère des Vendredis (W-FRI)
-    # On commence à BACKTEST_START et on s'arrête à la fin des prix dispos
     end_date = prices_df.index[-1]
     
     # On crée la liste des dates de rebalancement (tous les vendredis)
     rebal_dates = pd.date_range(start=BACKTEST_START, end=end_date, freq='W-FRI')
     
-    # On filtre pour commencer après CUTOFF_MARKET si besoin
     rebal_dates = rebal_dates[rebal_dates >= pd.Timestamp(CUTOFF_MARKET)]
 
     equity_curve = []
@@ -485,7 +467,7 @@ def backtest():
         else:
             current_portfolio = w
             
-            # Log simple pour debug (1 fois sur 10)
+            # Log (1 fois sur 10)
             if i % 10 == 0:
                 print(f"Rebal {t.date()} | Regime: {macro_df.index[macro_df.index<=t][-1].date()} | Mom Score: {mom_score:.2f}")
 
@@ -498,7 +480,7 @@ def backtest():
                 port_row[f"w_{asset}"] = current_portfolio.get(asset, 0.0)
             all_portfolios.append(port_row)
 
-        # Application des poids sur la semaine à venir (t exclu -> t_next inclus)
+        # Application des poids sur la semaine à venir 
         if current_portfolio is not None:
             window_prices = prices_df.loc[(prices_df.index > t) & (prices_df.index <= t_next)]
             if window_prices.empty:
