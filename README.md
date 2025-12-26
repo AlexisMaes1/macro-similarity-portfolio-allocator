@@ -4,7 +4,7 @@
 
 A data-driven investment strategy backtester that combines **macroeconomic regime detection** with **technical momentum signals** to dynamically rebalance a multi-asset portfolio.
 
-This project implements a **weekly rebalancing** strategy using a "History-Based" Markowitz optimization approach. Instead of using recent historical volatility, it identifies similar macroeconomic periods in the past (using KNN) to project future risk and returns.
+This project implements a **weekly rebalancing** strategy using a "History-Based" Markowitz optimization approach. Instead of using recent historical volatility, it identifies similar macroeconomic periods in the past to evaluate actual future risk and returns.
 
 You can also find the png comparing the performance of the SP500 and the results I had with the following configuration : 
 -target vol = 15%
