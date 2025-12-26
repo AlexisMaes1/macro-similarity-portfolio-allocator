@@ -83,8 +83,3 @@ python backtest.py
 
 ```
 
-
-
-## ⚠️ Disclaimer
-
-*This project is for educational and research purposes only. Past performance is not indicative of future results. Nothing in this repository constitutes financial advice.*
