@@ -7,6 +7,7 @@ A data-driven investment strategy backtester that combines **macroeconomic regim
 This project implements a **weekly rebalancing** strategy using a "History-Based" Markowitz optimization approach. Instead of using recent historical volatility, it identifies similar macroeconomic periods in the past to evaluate actual future risk and returns.
 
 You can also find the png comparing the performance of the SP500 and the results I had with the following configuration : 
+
 -target vol = 15%
 -long only
 -max weight = 25% (there is only 11 ETF)
