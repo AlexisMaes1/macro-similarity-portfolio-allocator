@@ -9,9 +9,13 @@ This project implements a **weekly rebalancing** strategy using a "History-Based
 You can also find the png comparing the performance of the SP500 and the results I had with the following configuration : 
 
 -target vol = 15%
+
 -long only
+
 -max weight = 25% (there is only 11 ETF)
+
 -shrinkage = 0 (it increases return)
+
 It gives a sharp ratio of 1.01 with an annual return of 11.50%, a risk of 11.43%, and a maximum drawdown of 13.23%.
 
 
